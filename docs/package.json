@@ -1,0 +1,19 @@
+{
+  "name": "Periturf.IdentityServer",
+  "version": "0.0.1",
+  "description": "IdentityServer component for Periturf",
+  "main": "index.js",
+  "authors": {
+    "name": "Adam Burton",
+    "email": "adz21c@gmail.com"
+  },
+  "repository": "https://github.com/adz21c/Periturf.IdentityServer/Periturf.IdentityServer",
+  "scripts": {
+    "dev": "vuepress dev src",
+    "build": "vuepress build src"
+  },
+  "license": "MIT",
+  "devDependencies": {
+    "vuepress": "^1.5.3"
+  }
+}
