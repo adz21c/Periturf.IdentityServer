@@ -1,0 +1,29 @@
+<Project>
+
+  <PropertyGroup>
+    <GeneratePackageOnBuild>false</GeneratePackageOnBuild>
+    <PackageLicenseExpression>Apache-2.0</PackageLicenseExpression>
+    <PackageProjectUrl>https://github.com/adz21c/Periturf.IdentityServer</PackageProjectUrl>
+    <RepositoryUrl>https://github.com/adz21c/Periturf.IdentityServer</RepositoryUrl>
+    <RepositoryType>git</RepositoryType>
+    <PackageTags>test;testing</PackageTags>
+    <Authors>adz21c</Authors>
+  </PropertyGroup>
+
+  <PropertyGroup Condition=" '$(IsTestProject)' != 'true' ">
+    <LangVersion>latest</LangVersion>
+    <Nullable>enable</Nullable>
+    <GenerateDocumentationFile>true</GenerateDocumentationFile>
+    <WarningsAsErrors>NU1605;CS1591;CS8618;CS8625;CS8604</WarningsAsErrors>
+  </PropertyGroup>
+
+  <ItemGroup Condition=" '$(IsTestProject)' != 'true' ">
+    <AssemblyAttribute Include="System.Runtime.CompilerServices.InternalsVisibleTo">
+      <_Parameter1>Periturf.IdentityServer.Tests</_Parameter1>
+    </AssemblyAttribute>
+    <AssemblyAttribute Include="System.Runtime.CompilerServices.InternalsVisibleTo">
+      <_Parameter1>DynamicProxyGenAssembly2</_Parameter1>
+    </AssemblyAttribute>
+  </ItemGroup>
+
+</Project>
