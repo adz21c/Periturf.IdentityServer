@@ -1,4 +1,6 @@
-﻿using Microsoft.AspNetCore.Http;
+﻿using Microsoft.AspNetCore.Builder;
+using Microsoft.AspNetCore.Http;
+using Microsoft.Extensions.DependencyInjection;
 using Periturf.Web.Setup;
 using System;
 using System.Collections.Generic;
@@ -22,7 +24,10 @@ namespace Periturf.IdentityServer.Setup
 
         public ConfigureWebAppDto Configure()
         {
-            throw new NotImplementedException();
+            return new ConfigureWebAppDto(
+                new IdentityServerComponent(),
+                app => app.Map(Path, idApp => idApp.UseIdentityServer()),
+                services => services.AddIdentityServer());
         }
     }
 }

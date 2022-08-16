@@ -6,6 +6,7 @@
   </PropertyGroup>
 
   <ItemGroup>
+    <PackageReference Include="Duende.IdentityServer" Version="6.1.4" />
     <PackageReference Include="Periturf" Version="0.6.0-develop0013" />
     <PackageReference Include="Periturf.Hosting" Version="0.6.0-develop0013" />
     <PackageReference Include="Periturf.Web" Version="0.6.0-develop0021" />
