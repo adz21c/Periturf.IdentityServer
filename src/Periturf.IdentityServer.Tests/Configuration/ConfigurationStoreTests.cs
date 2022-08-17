@@ -122,5 +122,32 @@ namespace Periturf.IdentityServer.Tests.Configuration
             Assert.That(foundClient, Is.Not.Null);
             Assert.That(foundClient.ClientName, Is.EqualTo(_client1Alt.ClientName));
         }
+
+        [Test]
+        public async Task Given_Config1AndConfig2_When_DisposeConfig2_Then_Client2NotFound()
+        {
+            var spec2 = new IdentityServerConfigurationSpecification(_configStore);
+            spec2.Client(_client2);
+            var config2Handle = await spec2.ApplyAsync();
+
+            Client? client1 = null;
+            Assume.That(async () => client1 = await _configStore.FindClientByIdAsync(_client1.ClientId), Throws.Nothing);
+            Assume.That(client1, Is.Not.Null);
+            Assume.That(client1.ClientId, Is.EqualTo(_client1.ClientId));
+
+            Client? client2 = null;
+            Assume.That(async () => client2 = await _configStore.FindClientByIdAsync(_client2.ClientId), Throws.Nothing);
+            Assume.That(client2, Is.Not.Null);
+            Assume.That(client2.ClientId, Is.EqualTo(_client2.ClientId));
+
+            await config2Handle.DisposeAsync();
+
+            var foundClient = await _configStore.FindClientByIdAsync(_client1.ClientId);
+            Assert.That(foundClient, Is.Not.Null);
+            Assert.That(foundClient.ClientId, Is.EqualTo(_client1.ClientId));
+
+            var foundClient2 = await _configStore.FindClientByIdAsync(_client2.ClientId);
+            Assert.That(foundClient2, Is.Null);
+        }
     }
 }
