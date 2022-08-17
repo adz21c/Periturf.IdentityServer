@@ -1,6 +1,7 @@
 ﻿using Microsoft.AspNetCore.Builder;
 using Microsoft.AspNetCore.Http;
 using Microsoft.Extensions.DependencyInjection;
+using Periturf.IdentityServer.Configuration;
 using Periturf.Web.Setup;
 using System;
 using System.Collections.Generic;
@@ -24,10 +25,16 @@ namespace Periturf.IdentityServer.Setup
 
         public ConfigureWebAppDto Configure()
         {
+            var configurationStore = new ConfigurationStore();
             return new ConfigureWebAppDto(
                 new IdentityServerComponent(),
                 app => app.Map(Path, idApp => idApp.UseIdentityServer()),
-                services => services.AddIdentityServer());
+                services =>
+                {
+                    services.AddSingleton(configurationStore);
+                    services.AddIdentityServer()
+                        .AddClientStore<ClientStore>();
+                });
         }
     }
 }
