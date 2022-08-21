@@ -24,10 +24,10 @@ namespace Periturf.IdentityServer.Configuration
             return Task.FromResult<IConfigurationHandle>(new ConfigurationHandle(_configurations, config));
         }
 
-        public Task<Client> FindClientByIdAsync(string clientId)
+        public Task<Client?> FindClientByIdAsync(string clientId)
         {
             return Task.FromResult(_configurations.Reverse<Configuration>()
-                .SelectMany(x => x.Clients)
+                .SelectMany(x => x.Clients ?? Enumerable.Empty<Client>())
                 .FirstOrDefault(x => x.ClientId == clientId));
         }
     }
