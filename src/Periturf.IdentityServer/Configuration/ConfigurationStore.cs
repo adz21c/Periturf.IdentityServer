@@ -9,7 +9,7 @@ using System.Threading.Tasks;
 
 namespace Periturf.IdentityServer.Configuration
 {
-    class ConfigurationStore : IClientStore
+    class ConfigurationStore : IClientStore, IResourceStore
     {
         private readonly List<Configuration> _configurations = new List<Configuration>();
 
@@ -17,9 +17,8 @@ namespace Periturf.IdentityServer.Configuration
         {
         }
 
-        internal Task<IConfigurationHandle> AddConfigurationAsync(List<Client> clients, CancellationToken ct)
+        internal Task<IConfigurationHandle> AddConfigurationAsync(Configuration config, CancellationToken ct)
         {
-            var config = new Configuration(clients);
             _configurations.Add(config);
             return Task.FromResult<IConfigurationHandle>(new ConfigurationHandle(_configurations, config));
         }
@@ -29,6 +28,37 @@ namespace Periturf.IdentityServer.Configuration
             return Task.FromResult(_configurations.Reverse<Configuration>()
                 .SelectMany(x => x.Clients ?? Enumerable.Empty<Client>())
                 .FirstOrDefault(x => x.ClientId == clientId));
+        }
+
+        public Task<IEnumerable<IdentityResource>> FindIdentityResourcesByScopeNameAsync(IEnumerable<string> scopeNames)
+        {
+            throw new NotImplementedException();
+        }
+
+        public Task<IEnumerable<ApiScope>> FindApiScopesByNameAsync(IEnumerable<string> scopeNames)
+        {
+            throw new NotImplementedException();
+        }
+
+        public Task<IEnumerable<ApiResource>> FindApiResourcesByScopeNameAsync(IEnumerable<string> scopeNames)
+        {
+            return Task.FromResult(_configurations.Reverse<Configuration>()
+                .SelectMany(x => x.ApiResources ?? Enumerable.Empty<ApiResource>())
+                .Where(x => x.Scopes.Intersect(scopeNames).Any())
+                .DistinctBy(x => x.Name));
+        }
+
+        public Task<IEnumerable<ApiResource>> FindApiResourcesByNameAsync(IEnumerable<string> apiResourceNames)
+        {
+            return Task.FromResult(_configurations.Reverse<Configuration>()
+                .SelectMany(x => x.ApiResources ?? Enumerable.Empty<ApiResource>())
+                .Where(x => apiResourceNames.Contains(x.Name))
+                .DistinctBy(x => x.Name));
+        }
+
+        public Task<Resources> GetAllResourcesAsync()
+        {
+            throw new NotImplementedException();
         }
     }
 }

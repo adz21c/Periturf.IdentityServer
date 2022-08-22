@@ -9,12 +9,12 @@ using System.Linq;
 using System.Text;
 using System.Threading.Tasks;
 
-namespace Periturf.IdentityServer.Tests.Configuration
+namespace Periturf.IdentityServer.Tests.Configuration.ConfigurationStoreTests
 {
-    class ConfigurationStoreTests
+    class ClientTests
     {
         private ConfigurationStore _configStore;
-        
+
         private string _secret1 = "Secret".Sha256();
         private Client _client1 = new Client
         {
