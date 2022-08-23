@@ -15,6 +15,7 @@ namespace Periturf.IdentityServer.Configuration
 
         private readonly List<Client> _clients = new List<Client>();
         private readonly List<ApiResource> _apiResources = new List<ApiResource>();
+        private readonly List<IdentityResource> _identityResources = new List<IdentityResource>();
 
         public IdentityServerConfigurationSpecification(ConfigurationStore configStore)
         {
@@ -26,15 +27,20 @@ namespace Periturf.IdentityServer.Configuration
             _clients.Add(client);
         }
 
-        public void ApiResource(ApiResource resource1)
+        public void ApiResource(ApiResource resource)
         {
-            _apiResources.Add(resource1);
+            _apiResources.Add(resource);
+        }
+
+        public void IdentityResource(IdentityResource resource)
+        {
+            _identityResources.Add(resource);
         }
 
         public async Task<IConfigurationHandle> ApplyAsync(CancellationToken ct = default)
         {
             return await _configStore.AddConfigurationAsync(
-                new Configuration(_clients, _apiResources),
+                new Configuration(_clients, _apiResources, _identityResources),
                 ct);
         }
     }

@@ -32,7 +32,10 @@ namespace Periturf.IdentityServer.Configuration
 
         public Task<IEnumerable<IdentityResource>> FindIdentityResourcesByScopeNameAsync(IEnumerable<string> scopeNames)
         {
-            throw new NotImplementedException();
+            return Task.FromResult(_configurations.Reverse<Configuration>()
+                .SelectMany(x => x.IdentityResources ?? Enumerable.Empty<IdentityResource>())
+                .Where(x => scopeNames.Contains(x.Name))
+                .DistinctBy(x => x.Name));
         }
 
         public Task<IEnumerable<ApiScope>> FindApiScopesByNameAsync(IEnumerable<string> scopeNames)
