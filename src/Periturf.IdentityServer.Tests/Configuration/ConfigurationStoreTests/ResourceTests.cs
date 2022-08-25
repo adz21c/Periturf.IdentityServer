@@ -11,7 +11,7 @@ using System.Threading.Tasks;
 
 namespace Periturf.IdentityServer.Tests.Configuration.ConfigurationStoreTests
 {
-    class ApiResourceTests
+    class ResourceTests
     {
         private const string NoResource = "NoResource";
         private const string NoResourceScope = "NoResourceScope";
@@ -20,18 +20,23 @@ namespace Periturf.IdentityServer.Tests.Configuration.ConfigurationStoreTests
         private const string Scope3 = "Scope3";
         private ConfigurationStore _configStore;
 
-        private readonly ApiResource _resource1 = new ApiResource
+        private readonly IdentityResource _identityResource1 = new IdentityResource
         {
             Name = "Resource1",
             DisplayName = "R1",
             Enabled = true,
-            Scopes = new List<string> { Scope1 }
         };
 
-        private readonly ApiResource _resource1Alt = new ApiResource
+        private readonly IdentityResource _identityResource2 = new IdentityResource
+        {
+            Name = "Resource2",
+            Enabled = false,
+        };
+
+        private readonly ApiResource _resource1 = new ApiResource
         {
             Name = "Resource1",
-            DisplayName = "R1.5",
+            DisplayName = "R1",
             Enabled = true,
             Scopes = new List<string> { Scope1 }
         };
@@ -43,13 +48,6 @@ namespace Periturf.IdentityServer.Tests.Configuration.ConfigurationStoreTests
             Scopes = new List<string> { Scope2 }
         };
 
-        private readonly ApiResource _resource3 = new ApiResource
-        {
-            Name = "Resource3",
-            Enabled = true,
-            Scopes = new List<string> { Scope3 }
-        };
-
         [SetUp]
         public async Task SetUpAsync()
         {
@@ -57,11 +55,24 @@ namespace Periturf.IdentityServer.Tests.Configuration.ConfigurationStoreTests
             var spec1 = new IdentityServerConfigurationSpecification(_configStore);
             spec1.ApiResource(_resource1);
             spec1.ApiResource(_resource2);
+            spec1.IdentityResource(_identityResource1);
+            spec1.IdentityResource(_identityResource2);
             await spec1.ApplyAsync();
         }
 
         [Test]
-        public async Task Given_Resource1AndResource2_When_FindResourcesByName_Then_ResourcesFound()
+        public async Task Given_Resource1AndResource2_When_FindIdentityResourcesByScopes_Then_ResourcesFound()
+        {
+            var resourcesEnum = await _configStore.FindIdentityResourcesByScopeNameAsync(new[] { _identityResource1.Name, _identityResource2.Name, NoResourceScope });
+            var resources = resourcesEnum.ToList();
+            Assert.That(resources, Is.Not.Null.And.Count.EqualTo(2));
+            Assert.That(resources.SingleOrDefault(x => x.Name == _identityResource1.Name), Is.Not.Null);
+            Assert.That(resources.SingleOrDefault(x => x.Name == _identityResource2.Name), Is.Not.Null);
+            Assert.That(resources.SingleOrDefault(x => x.Name == NoResourceScope), Is.Null);
+        }
+
+        [Test]
+        public async Task Given_Resource1AndResource2_When_FindApiResourcesByName_Then_ResourcesFound()
         {
             var resourcesEnum = await _configStore.FindApiResourcesByNameAsync(new[] { _resource1.Name, _resource2.Name, NoResource });
             var resources = resourcesEnum.ToList();
@@ -88,7 +99,7 @@ namespace Periturf.IdentityServer.Tests.Configuration.ConfigurationStoreTests
         }
 
         [Test]
-        public async Task Given_Resource1AndResource2_When_FindResourcesByScopes_Then_ResourcesFound()
+        public async Task Given_Resource1AndResource2_When_FindApiResourcesByScopes_Then_ResourcesFound()
         {
             var resourcesEnum = await _configStore.FindApiResourcesByScopeNameAsync(new[] { Scope1, Scope2, NoResourceScope });
             var resources = resourcesEnum.ToList();
