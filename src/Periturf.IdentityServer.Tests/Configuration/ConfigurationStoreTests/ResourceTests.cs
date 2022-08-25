@@ -66,9 +66,9 @@ namespace Periturf.IdentityServer.Tests.Configuration.ConfigurationStoreTests
             var resourcesEnum = await _configStore.FindIdentityResourcesByScopeNameAsync(new[] { _identityResource1.Name, _identityResource2.Name, NoResourceScope });
             var resources = resourcesEnum.ToList();
             Assert.That(resources, Is.Not.Null.And.Count.EqualTo(2));
-            Assert.That(resources.SingleOrDefault(x => x.Name == _identityResource1.Name), Is.Not.Null);
-            Assert.That(resources.SingleOrDefault(x => x.Name == _identityResource2.Name), Is.Not.Null);
-            Assert.That(resources.SingleOrDefault(x => x.Name == NoResourceScope), Is.Null);
+            Assert.That(resources, Has.One.Property("Name").EqualTo(_identityResource1.Name));
+            Assert.That(resources, Has.One.Property("Name").EqualTo(_identityResource2.Name));
+            Assert.That(resources, Has.None.Property("Name").EqualTo(NoResourceScope));
         }
 
         [Test]
@@ -104,9 +104,21 @@ namespace Periturf.IdentityServer.Tests.Configuration.ConfigurationStoreTests
             var resourcesEnum = await _configStore.FindApiResourcesByScopeNameAsync(new[] { Scope1, Scope2, NoResourceScope });
             var resources = resourcesEnum.ToList();
             Assert.That(resources, Is.Not.Null.And.Count.EqualTo(2));
-            Assert.That(resources.SingleOrDefault(x => x.Scopes.Contains(Scope1)), Is.Not.Null);
-            Assert.That(resources.SingleOrDefault(x => x.Scopes.Contains(Scope2)), Is.Not.Null);
-            Assert.That(resources.SingleOrDefault(x => x.Scopes.Contains(NoResourceScope)), Is.Null);
+            Assert.That(resources, Has.One.Matches<ApiResource>(x => x.Scopes.Contains(Scope1)));
+            Assert.That(resources, Has.One.Matches<ApiResource>(x => x.Scopes.Contains(Scope2)));
+            Assert.That(resources, Has.None.Matches<ApiResource>(x => x.Scopes.Contains(NoResourceScope)));
+        }
+
+        [Test]
+        public async Task Given_Resource1AndResource2_When_GetAllResources_Then_ResourcesFound()
+        {
+            var resources = await _configStore.GetAllResourcesAsync();
+            Assert.That(resources.ApiResources, Is.Not.Null.And.Count.EqualTo(2));
+            Assert.That(resources.ApiResources, Has.One.Property("Name").EqualTo(_resource1.Name));
+            Assert.That(resources.ApiResources, Has.One.Property("Name").EqualTo(_resource2.Name));
+            Assert.That(resources.IdentityResources, Is.Not.Null.And.Count.EqualTo(2));
+            Assert.That(resources.IdentityResources, Has.One.Property("Name").EqualTo(_identityResource1.Name));
+            Assert.That(resources.IdentityResources, Has.One.Property("Name").EqualTo(_identityResource2.Name));
         }
     }
 }
