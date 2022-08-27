@@ -90,18 +90,18 @@ namespace Periturf.IdentityServer.Tests.Configuration.ConfigurationStoreTests
             var initialApiResourcesEnum = await _configStore.FindApiResourcesByNameAsync(new[] { _resource1.Name, _resource2.Name, _resource3.Name, NoResource });
             var initialApiResources = initialApiResourcesEnum.ToList();
             Assume.That(initialApiResources, Is.Not.Null.And.Count.EqualTo(2));
-            Assume.That(initialApiResources.SingleOrDefault(x => x.Name == _resource1.Name), Is.Not.Null);
-            Assume.That(initialApiResources.SingleOrDefault(x => x.Name == _resource2.Name), Is.Not.Null);
-            Assume.That(initialApiResources.SingleOrDefault(x => x.Name == _resource3.Name), Is.Null);
-            Assume.That(initialApiResources.SingleOrDefault(x => x.Name == NoResource), Is.Null);
+            Assume.That(initialApiResources, Has.One.Property("Name").EqualTo(_resource1.Name));
+            Assume.That(initialApiResources, Has.One.Property("Name").EqualTo(_resource2.Name));
+            Assume.That(initialApiResources, Has.None.Property("Name").EqualTo(_resource3.Name));
+            Assume.That(initialApiResources, Has.None.Property("Name").EqualTo(NoResource));
 
             var initialIdentityResourcesEnum = await _configStore.FindIdentityResourcesByScopeNameAsync(new[] { _identityResource1.Name, _identityResource2.Name, _identityResource3.Name, NoResourceScope });
             var initialIdentityResources = initialIdentityResourcesEnum.ToList();
             Assume.That(initialIdentityResources, Is.Not.Null.And.Count.EqualTo(2));
-            Assume.That(initialIdentityResources.SingleOrDefault(x => x.Name == _identityResource1.Name), Is.Not.Null);
-            Assume.That(initialIdentityResources.SingleOrDefault(x => x.Name == _identityResource2.Name), Is.Not.Null);
-            Assume.That(initialIdentityResources.SingleOrDefault(x => x.Name == _identityResource3.Name), Is.Null);
-            Assume.That(initialIdentityResources.SingleOrDefault(x => x.Name == NoResourceScope), Is.Null);
+            Assume.That(initialIdentityResources, Has.One.Property("Name").EqualTo(_resource1.Name));
+            Assume.That(initialIdentityResources, Has.One.Property("Name").EqualTo(_resource2.Name));
+            Assume.That(initialIdentityResources, Has.None.Property("Name").EqualTo(_resource3.Name));
+            Assume.That(initialIdentityResources, Has.None.Property("Name").EqualTo(NoResource));
 
             var spec2 = new IdentityServerConfigurationSpecification(_configStore);
             spec2.ApiResource(_resource1Alt);
@@ -119,12 +119,10 @@ namespace Periturf.IdentityServer.Tests.Configuration.ConfigurationStoreTests
             var resources = resourcesEnum.ToList();
 
             Assert.That(resources, Is.Not.Null.And.Count.EqualTo(3));
-            var r1 = resources.SingleOrDefault(x => x.Name == _resource1.Name);
-            Assert.That(r1, Is.Not.Null);
-            Assert.That(r1.DisplayName, Is.EqualTo(_resource1Alt.DisplayName));
-            Assert.That(resources.SingleOrDefault(x => x.Name == _resource2.Name), Is.Not.Null);
-            Assert.That(resources.SingleOrDefault(x => x.Name == _resource3.Name), Is.Not.Null);
-            Assert.That(resources.SingleOrDefault(x => x.Name == NoResource), Is.Null);
+            Assert.That(resources, Has.One.Property("Name").EqualTo(_resource1.Name).And.Property("DisplayName").EqualTo(_resource1Alt.DisplayName));
+            Assert.That(resources, Has.One.Property("Name").EqualTo(_resource2.Name));
+            Assert.That(resources, Has.One.Property("Name").EqualTo(_resource3.Name));
+            Assert.That(resources, Has.None.Property("Name").EqualTo(NoResource));
         }
 
 
@@ -134,12 +132,10 @@ namespace Periturf.IdentityServer.Tests.Configuration.ConfigurationStoreTests
             var resourcesEnum = await _configStore.FindApiResourcesByScopeNameAsync(new[] { Scope1, Scope2, Scope3, NoResourceScope });
             var resources = resourcesEnum.ToList();
             Assert.That(resources, Is.Not.Null.And.Count.EqualTo(3));
-            var r1 = resources.SingleOrDefault(x => x.Scopes.Contains(Scope1));
-            Assert.That(r1, Is.Not.Null);
-            Assert.That(r1.DisplayName, Is.EqualTo(_resource1Alt.DisplayName));
-            Assert.That(resources.SingleOrDefault(x => x.Scopes.Contains(Scope2)), Is.Not.Null);
-            Assert.That(resources.SingleOrDefault(x => x.Scopes.Contains(Scope3)), Is.Not.Null);
-            Assert.That(resources.SingleOrDefault(x => x.Scopes.Contains(NoResourceScope)), Is.Null);
+            Assert.That(resources, Has.One.Property("Name").EqualTo(_resource1.Name).And.Property("DisplayName").EqualTo(_resource1Alt.DisplayName));
+            Assert.That(resources, Has.One.Property("Name").EqualTo(_resource2.Name));
+            Assert.That(resources, Has.One.Property("Name").EqualTo(_resource3.Name));
+            Assert.That(resources, Has.None.Property("Name").EqualTo(NoResource));
         }
 
         [Test]
@@ -149,11 +145,29 @@ namespace Periturf.IdentityServer.Tests.Configuration.ConfigurationStoreTests
             var resources = resourcesEnum.ToList();
 
             Assert.That(resources, Is.Not.Null.And.Count.EqualTo(3));
-            var r1 = resources.SingleOrDefault(x => x.Name == _identityResource1.Name);
-            Assert.That(r1, Is.Not.Null);
-            Assert.That(r1.DisplayName, Is.EqualTo(_identityResource1Alt.DisplayName));
-            Assert.That(resources.SingleOrDefault(x => x.Name == _identityResource2.Name), Is.Not.Null);
-            Assert.That(resources.SingleOrDefault(x => x.Name == NoResourceScope), Is.Null);
+            Assert.That(resources, Has.One.Property("Name").EqualTo(_identityResource1.Name).And.Property("DisplayName").EqualTo(_identityResource1Alt.DisplayName));
+            Assert.That(resources, Has.One.Property("Name").EqualTo(_identityResource1.Name));
+            Assert.That(resources, Has.One.Property("Name").EqualTo(_identityResource1.Name));
+            Assert.That(resources, Has.None.Property("Name").EqualTo(NoResource));
+        }
+
+
+        [Test]
+        public async Task Given_ConfigWithR1R2AndConfigWithR1AltAndR3_When_GetAllResources_Then_R2AndR3FoundAndR1AltFound()
+        {
+            var resources = await _configStore.GetAllResourcesAsync();
+
+            Assert.That(resources?.ApiResources, Is.Not.Null.And.Count.EqualTo(3));
+            Assert.That(resources.ApiResources, Has.One.Property("Name").EqualTo(_resource1.Name).And.Property("DisplayName").EqualTo(_resource1Alt.DisplayName));
+            Assert.That(resources.ApiResources, Has.One.Property("Name").EqualTo(_resource2.Name));
+            Assert.That(resources.ApiResources, Has.One.Property("Name").EqualTo(_resource3.Name));
+            Assert.That(resources.ApiResources, Has.None.Property("Name").EqualTo(NoResource));
+
+            Assert.That(resources?.IdentityResources, Is.Not.Null.And.Count.EqualTo(3));
+            Assert.That(resources.IdentityResources, Has.One.Property("Name").EqualTo(_identityResource1.Name).And.Property("DisplayName").EqualTo(_identityResource1Alt.DisplayName));
+            Assert.That(resources.IdentityResources, Has.One.Property("Name").EqualTo(_identityResource1.Name));
+            Assert.That(resources.IdentityResources, Has.One.Property("Name").EqualTo(_identityResource1.Name));
+            Assert.That(resources.IdentityResources, Has.None.Property("Name").EqualTo(NoResource));
         }
     }
 }

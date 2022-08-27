@@ -104,19 +104,19 @@ namespace Periturf.IdentityServer.Tests.Configuration.ConfigurationStoreTests
             var resourcesEnum = await _configStore.FindApiResourcesByScopeNameAsync(new[] { Scope1, Scope2, NoResourceScope });
             var resources = resourcesEnum.ToList();
             Assert.That(resources, Is.Not.Null.And.Count.EqualTo(2));
-            Assert.That(resources, Has.One.Matches<ApiResource>(x => x.Scopes.Contains(Scope1)));
-            Assert.That(resources, Has.One.Matches<ApiResource>(x => x.Scopes.Contains(Scope2)));
-            Assert.That(resources, Has.None.Matches<ApiResource>(x => x.Scopes.Contains(NoResourceScope)));
+            Assert.That(resources, Has.One.Property("Name").EqualTo(_resource1.Name));
+            Assert.That(resources, Has.One.Property("Name").EqualTo(_resource2.Name));
+            Assert.That(resources, Has.None.Property("Scopes").Contains(NoResourceScope));
         }
 
         [Test]
         public async Task Given_Resource1AndResource2_When_GetAllResources_Then_ResourcesFound()
         {
             var resources = await _configStore.GetAllResourcesAsync();
-            Assert.That(resources.ApiResources, Is.Not.Null.And.Count.EqualTo(2));
+            Assert.That(resources?.ApiResources, Is.Not.Null.And.Count.EqualTo(2));
             Assert.That(resources.ApiResources, Has.One.Property("Name").EqualTo(_resource1.Name));
             Assert.That(resources.ApiResources, Has.One.Property("Name").EqualTo(_resource2.Name));
-            Assert.That(resources.IdentityResources, Is.Not.Null.And.Count.EqualTo(2));
+            Assert.That(resources?.IdentityResources, Is.Not.Null.And.Count.EqualTo(2));
             Assert.That(resources.IdentityResources, Has.One.Property("Name").EqualTo(_identityResource1.Name));
             Assert.That(resources.IdentityResources, Has.One.Property("Name").EqualTo(_identityResource2.Name));
         }

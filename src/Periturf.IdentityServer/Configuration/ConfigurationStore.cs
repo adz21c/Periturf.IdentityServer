@@ -61,7 +61,14 @@ namespace Periturf.IdentityServer.Configuration
 
         public Task<Resources> GetAllResourcesAsync()
         {
-            throw new NotImplementedException();
+            var configs = _configurations.Reverse<Configuration>().ToList();
+
+            return Task.FromResult(new Resources(
+                configs.SelectMany(x => x.IdentityResources ?? Enumerable.Empty<IdentityResource>())
+                    .DistinctBy(x => x.Name),
+                configs.SelectMany(x => x.ApiResources ?? Enumerable.Empty<ApiResource>())
+                    .DistinctBy(x => x.Name),
+                null));
         }
     }
 }
