@@ -8,6 +8,7 @@ using System.Collections.Generic;
 using System.Linq;
 using System.Text;
 using System.Threading.Tasks;
+using static System.Formats.Asn1.AsnWriter;
 
 namespace Periturf.IdentityServer.Tests.Configuration.ConfigurationStoreTests
 {
@@ -48,6 +49,9 @@ namespace Periturf.IdentityServer.Tests.Configuration.ConfigurationStoreTests
             Scopes = new List<string> { Scope2 }
         };
 
+        private readonly ApiScope _scope1 = new ApiScope(Scope1);
+        private readonly ApiScope _scope2 = new ApiScope(Scope2);
+
         [SetUp]
         public async Task SetUpAsync()
         {
@@ -57,6 +61,8 @@ namespace Periturf.IdentityServer.Tests.Configuration.ConfigurationStoreTests
             spec1.ApiResource(_resource2);
             spec1.IdentityResource(_identityResource1);
             spec1.IdentityResource(_identityResource2);
+            spec1.Scope(_scope1);
+            spec1.Scope(_scope2);
             await spec1.ApplyAsync();
         }
 
@@ -110,6 +116,17 @@ namespace Periturf.IdentityServer.Tests.Configuration.ConfigurationStoreTests
         }
 
         [Test]
+        public async Task Given_Scope1AndScope2_When_FindApiScopesByName_Then_ScopesFound()
+        {
+            var scopesEnum = await _configStore.FindApiScopesByNameAsync(new[] { Scope1, Scope2, NoResourceScope });
+            var scopes = scopesEnum.ToList();
+            Assert.That(scopes, Is.Not.Null.And.Count.EqualTo(2));
+            Assert.That(scopes, Has.One.Property("Name").EqualTo(Scope1));
+            Assert.That(scopes, Has.One.Property("Name").EqualTo(Scope2));
+            Assert.That(scopes, Has.None.Property("Name").Contains(NoResourceScope));
+        }
+
+        [Test]
         public async Task Given_Resource1AndResource2_When_GetAllResources_Then_ResourcesFound()
         {
             var resources = await _configStore.GetAllResourcesAsync();
@@ -119,6 +136,9 @@ namespace Periturf.IdentityServer.Tests.Configuration.ConfigurationStoreTests
             Assert.That(resources?.IdentityResources, Is.Not.Null.And.Count.EqualTo(2));
             Assert.That(resources.IdentityResources, Has.One.Property("Name").EqualTo(_identityResource1.Name));
             Assert.That(resources.IdentityResources, Has.One.Property("Name").EqualTo(_identityResource2.Name));
+            Assert.That(resources?.ApiScopes, Is.Not.Null.And.Count.EqualTo(2));
+            Assert.That(resources.ApiScopes, Has.One.Property("Name").EqualTo(Scope1));
+            Assert.That(resources.ApiScopes, Has.One.Property("Name").EqualTo(Scope2));
         }
     }
 }

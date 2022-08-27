@@ -40,7 +40,10 @@ namespace Periturf.IdentityServer.Configuration
 
         public Task<IEnumerable<ApiScope>> FindApiScopesByNameAsync(IEnumerable<string> scopeNames)
         {
-            throw new NotImplementedException();
+            return Task.FromResult(_configurations.Reverse<Configuration>()
+                .SelectMany(x => x.ApiScopes ?? Enumerable.Empty<ApiScope>())
+                .Where(x => scopeNames.Contains(x.Name))
+                .DistinctBy(x => x.Name));
         }
 
         public Task<IEnumerable<ApiResource>> FindApiResourcesByScopeNameAsync(IEnumerable<string> scopeNames)
@@ -68,7 +71,8 @@ namespace Periturf.IdentityServer.Configuration
                     .DistinctBy(x => x.Name),
                 configs.SelectMany(x => x.ApiResources ?? Enumerable.Empty<ApiResource>())
                     .DistinctBy(x => x.Name),
-                null));
+                configs.SelectMany(x => x.ApiScopes ?? Enumerable.Empty<ApiScope>())
+                    .DistinctBy(x => x.Name)));
         }
     }
 }

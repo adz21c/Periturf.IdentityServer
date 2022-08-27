@@ -1,6 +1,7 @@
 ﻿using Duende.IdentityServer.Models;
 using FakeItEasy;
 using Microsoft.AspNetCore.Http;
+using Microsoft.VisualStudio.TestPlatform.CommunicationUtilities.Resources;
 using Periturf.Configuration;
 using Periturf.IdentityServer.Configuration;
 using System;
@@ -76,6 +77,11 @@ namespace Periturf.IdentityServer.Tests.Configuration.ConfigurationStoreTests
             Enabled = true,
         };
 
+        private readonly ApiScope _scope1 = new ApiScope(Scope1, "Scope1");
+        private readonly ApiScope _scope1Alt = new ApiScope(Scope1, "Scope1Alt");
+        private readonly ApiScope _scope2 = new ApiScope(Scope2);
+        private readonly ApiScope _scope3 = new ApiScope(Scope3);
+
         [SetUp]
         public async Task SetUpAsync()
         {
@@ -85,29 +91,17 @@ namespace Periturf.IdentityServer.Tests.Configuration.ConfigurationStoreTests
             spec1.ApiResource(_resource2);
             spec1.IdentityResource(_identityResource1);
             spec1.IdentityResource(_identityResource2);
+            spec1.Scope(_scope1);
+            spec1.Scope(_scope2);
             await spec1.ApplyAsync();
-
-            var initialApiResourcesEnum = await _configStore.FindApiResourcesByNameAsync(new[] { _resource1.Name, _resource2.Name, _resource3.Name, NoResource });
-            var initialApiResources = initialApiResourcesEnum.ToList();
-            Assume.That(initialApiResources, Is.Not.Null.And.Count.EqualTo(2));
-            Assume.That(initialApiResources, Has.One.Property("Name").EqualTo(_resource1.Name));
-            Assume.That(initialApiResources, Has.One.Property("Name").EqualTo(_resource2.Name));
-            Assume.That(initialApiResources, Has.None.Property("Name").EqualTo(_resource3.Name));
-            Assume.That(initialApiResources, Has.None.Property("Name").EqualTo(NoResource));
-
-            var initialIdentityResourcesEnum = await _configStore.FindIdentityResourcesByScopeNameAsync(new[] { _identityResource1.Name, _identityResource2.Name, _identityResource3.Name, NoResourceScope });
-            var initialIdentityResources = initialIdentityResourcesEnum.ToList();
-            Assume.That(initialIdentityResources, Is.Not.Null.And.Count.EqualTo(2));
-            Assume.That(initialIdentityResources, Has.One.Property("Name").EqualTo(_resource1.Name));
-            Assume.That(initialIdentityResources, Has.One.Property("Name").EqualTo(_resource2.Name));
-            Assume.That(initialIdentityResources, Has.None.Property("Name").EqualTo(_resource3.Name));
-            Assume.That(initialIdentityResources, Has.None.Property("Name").EqualTo(NoResource));
 
             var spec2 = new IdentityServerConfigurationSpecification(_configStore);
             spec2.ApiResource(_resource1Alt);
             spec2.ApiResource(_resource3);
             spec2.IdentityResource(_identityResource1Alt);
             spec2.IdentityResource(_identityResource3);
+            spec2.Scope(_scope1Alt);
+            spec2.Scope(_scope3);
             await spec2.ApplyAsync();
         }
 
@@ -146,11 +140,23 @@ namespace Periturf.IdentityServer.Tests.Configuration.ConfigurationStoreTests
 
             Assert.That(resources, Is.Not.Null.And.Count.EqualTo(3));
             Assert.That(resources, Has.One.Property("Name").EqualTo(_identityResource1.Name).And.Property("DisplayName").EqualTo(_identityResource1Alt.DisplayName));
-            Assert.That(resources, Has.One.Property("Name").EqualTo(_identityResource1.Name));
-            Assert.That(resources, Has.One.Property("Name").EqualTo(_identityResource1.Name));
+            Assert.That(resources, Has.One.Property("Name").EqualTo(_identityResource2.Name));
+            Assert.That(resources, Has.One.Property("Name").EqualTo(_identityResource3.Name));
             Assert.That(resources, Has.None.Property("Name").EqualTo(NoResource));
         }
 
+        [Test]
+        public async Task Given_ConfigWithR1R2AndConfigWithR1AltAndR3_When_FindApiScopesByName_Then_R2AndR3FoundAndR1AltFound()
+        {
+            var scopesEnum = await _configStore.FindApiScopesByNameAsync(new[] { _scope1.Name, _scope2.Name, _scope3.Name, NoResourceScope });
+            var scopes = scopesEnum.ToList();
+
+            Assert.That(scopes, Is.Not.Null.And.Count.EqualTo(3));
+            Assert.That(scopes, Has.One.Property("Name").EqualTo(_scope1.Name).And.Property("DisplayName").EqualTo(_scope1Alt.DisplayName));
+            Assert.That(scopes, Has.One.Property("Name").EqualTo(_scope2.Name));
+            Assert.That(scopes, Has.One.Property("Name").EqualTo(_scope3.Name));
+            Assert.That(scopes, Has.None.Property("Name").EqualTo(NoResource));
+        }
 
         [Test]
         public async Task Given_ConfigWithR1R2AndConfigWithR1AltAndR3_When_GetAllResources_Then_R2AndR3FoundAndR1AltFound()
@@ -165,9 +171,15 @@ namespace Periturf.IdentityServer.Tests.Configuration.ConfigurationStoreTests
 
             Assert.That(resources?.IdentityResources, Is.Not.Null.And.Count.EqualTo(3));
             Assert.That(resources.IdentityResources, Has.One.Property("Name").EqualTo(_identityResource1.Name).And.Property("DisplayName").EqualTo(_identityResource1Alt.DisplayName));
-            Assert.That(resources.IdentityResources, Has.One.Property("Name").EqualTo(_identityResource1.Name));
-            Assert.That(resources.IdentityResources, Has.One.Property("Name").EqualTo(_identityResource1.Name));
+            Assert.That(resources.IdentityResources, Has.One.Property("Name").EqualTo(_identityResource2.Name));
+            Assert.That(resources.IdentityResources, Has.One.Property("Name").EqualTo(_identityResource3.Name));
             Assert.That(resources.IdentityResources, Has.None.Property("Name").EqualTo(NoResource));
+
+            Assert.That(resources?.ApiScopes, Is.Not.Null.And.Count.EqualTo(3));
+            Assert.That(resources.ApiScopes, Has.One.Property("Name").EqualTo(_scope1.Name).And.Property("DisplayName").EqualTo(_scope1Alt.DisplayName));
+            Assert.That(resources.ApiScopes, Has.One.Property("Name").EqualTo(_scope2.Name));
+            Assert.That(resources.ApiScopes, Has.One.Property("Name").EqualTo(_scope3.Name));
+            Assert.That(resources.ApiScopes, Has.None.Property("Name").EqualTo(NoResource));
         }
     }
 }
