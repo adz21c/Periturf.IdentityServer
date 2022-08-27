@@ -1,12 +1,13 @@
 ﻿using Microsoft.AspNetCore.Http;
 using Periturf.Configuration;
+using Periturf.IdentityServer.Configuration;
 using System;
 using System.Collections.Generic;
 using System.Linq;
 using System.Text;
 using System.Threading.Tasks;
 
-namespace Periturf.IdentityServer.Configuration
+namespace Periturf
 {
     /// <summary>
     /// 
@@ -18,9 +19,11 @@ namespace Periturf.IdentityServer.Configuration
         /// </summary>
         /// <param name="context"></param>
         /// <param name="name">The name of the component</param>
-        public static void IdentityServer(this IConfigurationContext context, string name)
+        /// <param name="config"></param>
+        public static void IdentityServer(this IConfigurationContext context, string name, Action<IIdentityServerConfigurationConfigurator> config)
         {
             var spec = context.CreateComponentConfigSpecification<IdentityServerConfigurationSpecification>(name);
+            config(spec);
             context.AddSpecification(spec);
         }
     }

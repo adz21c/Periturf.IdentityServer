@@ -2,12 +2,20 @@
 using Periturf.Components;
 using Periturf.Configuration;
 using Periturf.Events;
+using Periturf.IdentityServer.Configuration;
 using Periturf.Verify;
 
 namespace Periturf.IdentityServer
 {
     class IdentityServerComponent : IComponent
     {
+        private readonly ConfigurationStore _configStore;
+
+        public IdentityServerComponent(ConfigurationStore configStore)
+        {
+            _configStore = configStore;
+        }
+
         public IComponentClient CreateClient()
         {
             throw new System.NotImplementedException();
@@ -20,7 +28,7 @@ namespace Periturf.IdentityServer
 
         public TSpecification CreateConfigurationSpecification<TSpecification>(IEventHandlerFactory eventHandlerFactory) where TSpecification : IConfigurationSpecification
         {
-            throw new System.NotImplementedException();
+            return (TSpecification)(object)new IdentityServerConfigurationSpecification(_configStore);
         }
     }
 }

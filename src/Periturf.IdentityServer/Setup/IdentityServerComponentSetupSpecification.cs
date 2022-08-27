@@ -27,13 +27,14 @@ namespace Periturf.IdentityServer.Setup
         {
             var configurationStore = new ConfigurationStore();
             return new ConfigureWebAppDto(
-                new IdentityServerComponent(),
+                new IdentityServerComponent(configurationStore),
                 app => app.Map(Path, idApp => idApp.UseIdentityServer()),
                 services =>
                 {
                     services.AddSingleton(configurationStore);
                     services.AddIdentityServer()
-                        .AddClientStore<ClientStore>();
+                        .AddClientStore<ClientStore>()
+                        .AddResourceStore<ResourceStore>();
                 });
         }
     }

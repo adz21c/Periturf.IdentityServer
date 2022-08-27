@@ -19,12 +19,14 @@ namespace Periturf.IdentityServer.Tests.Configuration
             var name = A.Dummy<string>();
             var _sut = new IdentityServerConfigurationSpecification(new ConfigurationStore());
 
+            var config = A.Dummy<Action<IIdentityServerConfigurationConfigurator>>();
             var configContext = A.Fake<IConfigurationContext>();
             A.CallTo(() => configContext.CreateComponentConfigSpecification<IdentityServerConfigurationSpecification>(A<string>._)).Returns(_sut);
 
-            configContext.IdentityServer(name);
+            configContext.IdentityServer(name, config);
 
             A.CallTo(() => configContext.CreateComponentConfigSpecification<IdentityServerConfigurationSpecification>(name)).MustHaveHappened().Then(
+                A.CallTo(() => config.Invoke(_sut)).MustHaveHappenedOnceExactly()).Then(
                 A.CallTo(() => configContext.AddSpecification(_sut)).MustHaveHappenedOnceExactly());
         }
 

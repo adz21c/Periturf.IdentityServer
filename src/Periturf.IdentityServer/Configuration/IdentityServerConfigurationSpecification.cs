@@ -9,7 +9,7 @@ using System.Threading.Tasks;
 
 namespace Periturf.IdentityServer.Configuration
 {
-    class IdentityServerConfigurationSpecification : IConfigurationSpecification
+    class IdentityServerConfigurationSpecification : IConfigurationSpecification, IIdentityServerConfigurationConfigurator
     {
         private readonly ConfigurationStore _configStore;
 
@@ -23,7 +23,7 @@ namespace Periturf.IdentityServer.Configuration
             _configStore = configStore;
         }
 
-        internal void Client(Client client)
+        public void Client(Client client)
         {
             _clients.Add(client);
         }
