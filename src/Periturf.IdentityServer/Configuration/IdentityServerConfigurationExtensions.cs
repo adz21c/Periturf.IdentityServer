@@ -20,6 +20,17 @@ namespace Periturf
         /// <param name="context"></param>
         /// <param name="name">The name of the component</param>
         /// <param name="config"></param>
+        public static void IdentityServer(this IConfigurationContext context, Action<IIdentityServerConfigurationConfigurator> config)
+        {
+            context.IdentityServer("IdentityServer", config);
+        }
+
+        /// <summary>
+        /// Configure an IdentityServer Component
+        /// </summary>
+        /// <param name="context"></param>
+        /// <param name="name">The name of the component</param>
+        /// <param name="config"></param>
         public static void IdentityServer(this IConfigurationContext context, string name, Action<IIdentityServerConfigurationConfigurator> config)
         {
             var spec = context.CreateComponentConfigSpecification<IdentityServerConfigurationSpecification>(name);

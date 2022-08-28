@@ -1,4 +1,5 @@
-﻿using Microsoft.AspNetCore.Builder;
+﻿using Duende.IdentityServer.Models;
+using Microsoft.AspNetCore.Builder;
 using Microsoft.AspNetCore.Http;
 using Microsoft.Extensions.DependencyInjection;
 using Periturf.IdentityServer.Configuration;
@@ -28,13 +29,15 @@ namespace Periturf.IdentityServer.Setup
             var configurationStore = new ConfigurationStore();
             return new ConfigureWebAppDto(
                 new IdentityServerComponent(configurationStore),
-                app => app.Map(Path, idApp => idApp.UseIdentityServer()),
+                app => app.UseIdentityServer(),
                 services =>
                 {
-                    services.AddSingleton(configurationStore);
+                    //services.AddSingleton(configurationStore);
                     services.AddIdentityServer()
-                        .AddClientStore<ClientStore>()
-                        .AddResourceStore<ResourceStore>();
+                        .AddInMemoryClients(Enumerable.Empty<Client>())
+                        .AddInMemoryApiResources(Enumerable.Empty<ApiResource>());
+                        //.AddClientStore<ClientStore>()
+                        //.AddResourceStore<ResourceStore>();
                 });
         }
     }
