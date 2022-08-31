@@ -10,6 +10,7 @@ namespace Periturf.IdentityServer.Tests.Integration
         private const string HostUrl = "http://localhost:36251";
         private const string IdentityServerUrl = HostUrl + "/IdentityServer";
         private Environment _environtment;
+        private DiscoveryDocumentResponse _discoveryDocument;
 
         [OneTimeSetUp]
         public async Task SetupAsync()
@@ -27,6 +28,19 @@ namespace Periturf.IdentityServer.Tests.Integration
                 });
             });
             await _environtment.StartAsync();
+
+            using var client = new HttpClient();
+            _discoveryDocument = await client.GetDiscoveryDocumentAsync(new DiscoveryDocumentRequest
+            {
+                Address = IdentityServerUrl,
+                Policy = new DiscoveryPolicy
+                {
+                    ValidateIssuerName = false,
+                    RequireHttps = false
+                }
+            });
+
+            Assume.That(_discoveryDocument, Is.Not.Null.And.Property("IsError").False);
         }
 
         [OneTimeTearDown]
@@ -41,21 +55,9 @@ namespace Periturf.IdentityServer.Tests.Integration
         {
             var client = new HttpClient();
 
-            var discoveryDocument = await client.GetDiscoveryDocumentAsync(new DiscoveryDocumentRequest
-            {
-                Address = IdentityServerUrl,
-                Policy = new DiscoveryPolicy
-                {
-                    ValidateIssuerName = false,
-                    RequireHttps = false
-                }
-            });
-            if (discoveryDocument.IsError)
-                Assert.Fail("Discovery failed");
-
             var tokenResponse = await client.RequestClientCredentialsTokenAsync(new ClientCredentialsTokenRequest
             {
-                Address = discoveryDocument.TokenEndpoint,
+                Address = _discoveryDocument.TokenEndpoint,
                 ClientId = "UnknownClient",
                 ClientSecret = "UnknownSecret",
                 Scope = "UnknownScope"
@@ -63,10 +65,8 @@ namespace Periturf.IdentityServer.Tests.Integration
 
             Assert.That(tokenResponse, Is.Not.Null);
             Assert.That(tokenResponse.IsError, Is.True);
+            Assert.That(tokenResponse.Error, Is.EqualTo("invalid_client"));
         }
-
-
-
 
         [Test]
         public async Task Given_NoClients_When_ConfigureClient_Then_AuthWorks()
@@ -86,29 +86,29 @@ namespace Periturf.IdentityServer.Tests.Integration
                 Enabled = true,
                 AllowedScopes = new List<string> { idScope.Name }
             };
+
+            using var client = new HttpClient();
+
+            var assumptionTokenResponse = await client.RequestClientCredentialsTokenAsync(new ClientCredentialsTokenRequest
+            {
+                Address = _discoveryDocument.TokenEndpoint,
+                ClientId = idClient.ClientId,
+                ClientSecret = IdClientSecret,
+                Scope = idScope.Name
+            });
+            Assume.That(assumptionTokenResponse, Is.Not.Null);
+            Assume.That(assumptionTokenResponse.IsError, Is.True);
+            Assume.That(assumptionTokenResponse.Error, Is.EqualTo("invalid_client"));
+
             await using var configHandle = await _environtment.ConfigureAsync(c => c.IdentityServer(c =>
             {
                 c.Client(idClient);
                 c.Scope(idScope);
             }));
 
-            var client = new HttpClient();
-
-            var discoveryDocument = await client.GetDiscoveryDocumentAsync(new DiscoveryDocumentRequest
-            {
-                Address = IdentityServerUrl,
-                Policy = new DiscoveryPolicy
-                {
-                    ValidateIssuerName = false,
-                    RequireHttps = false
-                }
-            });
-            if (discoveryDocument.IsError)
-                Assert.Fail("Discovery failed");
-
             var tokenResponse = await client.RequestClientCredentialsTokenAsync(new ClientCredentialsTokenRequest
             {
-                Address = discoveryDocument.TokenEndpoint,
+                Address = _discoveryDocument.TokenEndpoint,
                 ClientId = idClient.ClientId,
                 ClientSecret = IdClientSecret,
                 Scope = idScope.Name
