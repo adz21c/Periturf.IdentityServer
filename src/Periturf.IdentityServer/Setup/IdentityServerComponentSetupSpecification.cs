@@ -32,12 +32,10 @@ namespace Periturf.IdentityServer.Setup
                 app => app.UseIdentityServer(),
                 services =>
                 {
-                    //services.AddSingleton(configurationStore);
+                    services.AddSingleton(configurationStore);
                     services.AddIdentityServer()
-                        .AddInMemoryClients(Enumerable.Empty<Client>())
-                        .AddInMemoryApiResources(Enumerable.Empty<ApiResource>());
-                        //.AddClientStore<ClientStore>()
-                        //.AddResourceStore<ResourceStore>();
+                        .AddClientStore<ClientStore>()
+                        .AddResourceStore<ResourceStore>();
                 });
         }
     }
