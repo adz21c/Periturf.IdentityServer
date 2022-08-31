@@ -119,5 +119,82 @@ namespace Periturf.IdentityServer.Tests.Integration
             Assert.That(tokenResponse.AccessToken, Is.Not.Null);
             Assert.That(tokenResponse.TokenType, Is.EqualTo("Bearer"));
         }
+
+
+        [Test]
+        public async Task Given_Clients_When_ConfigureClient_Then_ClientConfigOverriden()
+        {
+            const string IdClientSecret = "Secret";
+            const string IdClientSecret2 = "Secret2";
+            const string IdClientId = "Client2";
+            var idScope = new ApiScope
+            {
+                Name = "Scope",
+                Enabled = true
+            };
+            await using var initialConfigHandle = await _environtment.ConfigureAsync(c => c.IdentityServer(c =>
+            {
+                c.Client(new Client
+                {
+                    ClientId = IdClientId,
+                    AllowedGrantTypes = GrantTypes.ClientCredentials,
+                    ClientSecrets = new List<Secret> { new Secret(IdClientSecret.Sha256()) },
+                    AccessTokenType = AccessTokenType.Jwt,
+                    Enabled = true,
+                    AllowedScopes = new List<string> { idScope.Name }
+                });
+                c.Scope(idScope);
+            }));
+
+            using var client = new HttpClient();
+
+            var assumptionTokenResponse = await client.RequestClientCredentialsTokenAsync(new ClientCredentialsTokenRequest
+            {
+                Address = _discoveryDocument.TokenEndpoint,
+                ClientId = IdClientId,
+                ClientSecret = IdClientSecret,
+                Scope = idScope.Name
+            });
+            Assume.That(assumptionTokenResponse, Is.Not.Null);
+            Assume.That(assumptionTokenResponse.IsError, Is.False);
+            Assume.That(assumptionTokenResponse.AccessToken, Is.Not.Null);
+
+            await using var configHandle = await _environtment.ConfigureAsync(c => c.IdentityServer(c =>
+            {
+                c.Client(new Client
+                {
+                    ClientId = IdClientId,
+                    AllowedGrantTypes = GrantTypes.ClientCredentials,
+                    ClientSecrets = new List<Secret> { new Secret(IdClientSecret2.Sha256()) },
+                    AccessTokenType = AccessTokenType.Jwt,
+                    Enabled = true,
+                    AllowedScopes = new List<string> { idScope.Name }
+                });
+            }));
+
+            var oldSecretResponse = await client.RequestClientCredentialsTokenAsync(new ClientCredentialsTokenRequest
+            {
+                Address = _discoveryDocument.TokenEndpoint,
+                ClientId = IdClientId,
+                ClientSecret = IdClientSecret,
+                Scope = idScope.Name
+            });
+            var newSecretResponse = await client.RequestClientCredentialsTokenAsync(new ClientCredentialsTokenRequest
+            {
+                Address = _discoveryDocument.TokenEndpoint,
+                ClientId = IdClientId,
+                ClientSecret = IdClientSecret2,
+                Scope = idScope.Name
+            });
+
+            Assert.That(oldSecretResponse, Is.Not.Null);
+            Assert.That(oldSecretResponse.IsError, Is.True);
+            Assert.That(oldSecretResponse.Error, Is.EqualTo("invalid_client"));
+
+            Assert.That(newSecretResponse, Is.Not.Null);
+            Assert.That(newSecretResponse.IsError, Is.False);
+            Assert.That(newSecretResponse.AccessToken, Is.Not.Null);
+            Assert.That(newSecretResponse.TokenType, Is.EqualTo("Bearer"));
+        }
     }
 }
