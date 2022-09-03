@@ -1,4 +1,5 @@
-﻿using Duende.IdentityServer.Models;
+﻿using Duende.IdentityServer.Configuration;
+using Duende.IdentityServer.Models;
 using Microsoft.AspNetCore.Builder;
 using Microsoft.AspNetCore.Http;
 using Microsoft.Extensions.DependencyInjection;
@@ -12,8 +13,10 @@ using System.Threading.Tasks;
 
 namespace Periturf.IdentityServer.Setup
 {
-    class IdentityServerComponentSetupSpecification : IWebComponentSetupSpecification
+    class IdentityServerComponentSetupSpecification : IWebComponentSetupSpecification, IIdentityServerSetupConfigurator
     {
+        private Action<IdentityServerOptions>? _options;
+
         public IdentityServerComponentSetupSpecification(string name, PathString path)
         {
             Name = name;
@@ -24,6 +27,11 @@ namespace Periturf.IdentityServer.Setup
 
         public PathString Path { get; }
 
+        public void Options(Action<IdentityServerOptions> options)
+        {
+            _options = options;
+        }
+
         public ConfigureWebAppDto Configure()
         {
             var configurationStore = new ConfigurationStore();
@@ -33,7 +41,7 @@ namespace Periturf.IdentityServer.Setup
                 services =>
                 {
                     services.AddSingleton(configurationStore);
-                    services.AddIdentityServer()
+                    services.AddIdentityServer(_options ?? (o => { }))
                         .AddClientStore<ClientStore>()
                         .AddResourceStore<ResourceStore>();
                 });
