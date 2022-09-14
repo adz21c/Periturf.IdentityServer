@@ -17,6 +17,7 @@
 
 using System;
 using System.Collections.Generic;
+using System.Linq;
 using System.Threading;
 using System.Threading.Channels;
 using System.Threading.Tasks;
@@ -28,47 +29,81 @@ namespace Periturf.IdentityServer.Verification
 {
     class EventVerificationManager : IEventSink, IEventVerificationManager
     {
-        private List<EventConditionFeed> _feeds = new List<EventConditionFeed>();
+        private readonly ReaderWriterLockSlim _lock = new ReaderWriterLockSlim();
+        private readonly List<IEventConditionFeed> _feeds = new List<IEventConditionFeed>();
 
         public IConditionFeed CreateFeed<TEvent>(IConditionInstanceFactory conditionInstanceFactory, Func<TEvent, ValueTask<bool>> evaluator)
             where TEvent : Event
         {
-            var feed = new EventConditionFeed(this, conditionInstanceFactory, (Func<ApiAuthenticationSuccessEvent, ValueTask<bool>>)evaluator);
-            _feeds.Add(feed);
+            var feed = new EventConditionFeed<TEvent>(this, conditionInstanceFactory, evaluator);
+
+            _lock.EnterWriteLock();
+            try
+            {
+                _feeds.Add(feed);
+            }
+            finally
+            {
+                _lock.ExitWriteLock();
+            }
+
             return feed;
         }
 
-        private void Remove(EventConditionFeed feed)
+        private void Remove(IEventConditionFeed feed)
         {
-            _feeds.Remove(feed);
+            _lock.EnterWriteLock();
+            try
+            {
+                _feeds.Remove(feed);
+            }
+            finally
+            {
+                _lock.ExitWriteLock();
+            }
         }
 
         public async Task PersistAsync(Event evt)
         {
-            foreach (var feed in _feeds)
-                await feed.EvaluateInstanceAsync((ApiAuthenticationSuccessEvent)evt, CancellationToken.None);
+            _lock.EnterReadLock();
+            try
+            {
+                await Task.WhenAll(_feeds.Select(x => x.EvaluateInstanceAsync(evt, CancellationToken.None).AsTask()));
+            }
+            finally
+            {
+                _lock.ExitReadLock();
+            }
         }
 
-        class EventConditionFeed : IConditionFeed
+        interface IEventConditionFeed : IConditionFeed
+        {
+            ValueTask EvaluateInstanceAsync(Event @event, CancellationToken ct);
+        }
+
+        class EventConditionFeed<TEvent> : IConditionFeed, IEventConditionFeed where TEvent : Event
         {
             private bool _disposed = false;
             private readonly Channel<int> _channel = Channel.CreateUnbounded<int>();
             private readonly EventVerificationManager _eventVerificationManager;
             private readonly IConditionInstanceFactory _conditionInstanceFactory;
-            private readonly Func<ApiAuthenticationSuccessEvent, ValueTask<bool>> _evaluator;
+            private readonly Func<TEvent, ValueTask<bool>> _evaluator;
 
-            public EventConditionFeed(EventVerificationManager eventVerificationManager, IConditionInstanceFactory conditionInstanceFactory, Func<ApiAuthenticationSuccessEvent, ValueTask<bool>> evaluator)
+            public EventConditionFeed(EventVerificationManager eventVerificationManager, IConditionInstanceFactory conditionInstanceFactory, Func<TEvent, ValueTask<bool>> evaluator)
             {
                 _eventVerificationManager = eventVerificationManager;
                 _conditionInstanceFactory = conditionInstanceFactory;
                 _evaluator = evaluator;
             }
 
-            public async ValueTask EvaluateInstanceAsync(ApiAuthenticationSuccessEvent @event, CancellationToken ct)
+            public async ValueTask EvaluateInstanceAsync(Event @event, CancellationToken ct)
             {
-                var result = await _evaluator(@event);
-                if (result)
-                    await _channel.Writer.WriteAsync(0, ct);
+                if (@event is TEvent concreteEvent)
+                {
+                    var result = await _evaluator(concreteEvent);
+                    if (result)
+                        await _channel.Writer.WriteAsync(0, ct);
+                }
             }
 
             public async Task<List<ConditionInstance>> WaitForInstancesAsync(CancellationToken ct)

@@ -102,7 +102,7 @@ namespace Periturf.IdentityServer.Tests.Verification
             Assume.That(_feed, Is.Not.Null);
 
             A.CallTo(() => _conditionInstanceFactory.Create(A<string>._)).Invokes((string id) => new ConditionInstance(TimeSpan.Zero, "ID"));
-            
+
             A.CallTo(() => _evaluator.Invoke(A<ApiAuthenticationSuccessEvent>._)).Returns(true);
 
             var evaluator2 = A.Fake<Func<ApiAuthenticationSuccessEvent, ValueTask<bool>>>();
@@ -111,6 +111,35 @@ namespace Periturf.IdentityServer.Tests.Verification
 
             await _sut.PersistAsync(new ApiAuthenticationSuccessEvent("", ""));
             await _sut.PersistAsync(new ApiAuthenticationSuccessEvent("", ""));
+
+            var instances1 = await _feed.WaitForInstancesAsync(new CancellationTokenSource(100).Token);
+            var instances2 = await feed2.WaitForInstancesAsync(new CancellationTokenSource(100).Token);
+
+            Assert.That(instances1, Is.Not.Null.And.Count.EqualTo(2));
+            Assert.That(instances2, Is.Not.Null.And.Count.EqualTo(1));
+            A.CallTo(() => _conditionInstanceFactory.Create(A<string>._)).MustHaveHappened();
+
+            // tear down
+            await feed2.DisposeAsync();
+        }
+
+        [Test]
+        public async Task Given_MultipleEventTypes_When_PersistAndWaitForInstances_Then_DifferentResultsForEachFeed()
+        {
+            Assume.That(_feed, Is.Not.Null);
+
+            A.CallTo(() => _conditionInstanceFactory.Create(A<string>._)).Invokes((string id) => new ConditionInstance(TimeSpan.Zero, "ID"));
+
+            A.CallTo(() => _evaluator.Invoke(A<ApiAuthenticationSuccessEvent>._)).Returns(true);
+
+            var evaluator2 = A.Fake<Func<ApiAuthenticationFailureEvent, ValueTask<bool>>>();
+            A.CallTo(() => evaluator2.Invoke(A<ApiAuthenticationFailureEvent>._)).ReturnsNextFromSequence(true, false);
+            var feed2 = _sut.CreateFeed(_conditionInstanceFactory, evaluator2);
+
+            await _sut.PersistAsync(new ApiAuthenticationSuccessEvent("", ""));
+            await _sut.PersistAsync(new ApiAuthenticationSuccessEvent("", ""));
+            await _sut.PersistAsync(new ApiAuthenticationFailureEvent("", ""));
+            await _sut.PersistAsync(new ApiAuthenticationFailureEvent("", ""));
 
             var instances1 = await _feed.WaitForInstancesAsync(new CancellationTokenSource(100).Token);
             var instances2 = await feed2.WaitForInstancesAsync(new CancellationTokenSource(100).Token);
