@@ -24,6 +24,7 @@ namespace Periturf.IdentityServer.Verification
 {
     interface IEventVerificationManager
     {
-        IConditionFeed CreateFeed(IConditionInstanceFactory conditionInstanceFactory, Func<ApiAuthenticationSuccessEvent, ValueTask<bool>> evaluator);
+        IConditionFeed CreateFeed<TEvent>(IConditionInstanceFactory conditionInstanceFactory, Func<TEvent, ValueTask<bool>> evaluator)
+            where TEvent : Event;
     }
 }

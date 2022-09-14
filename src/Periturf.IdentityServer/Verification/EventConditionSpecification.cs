@@ -29,15 +29,15 @@ using Periturf.Web;
 
 namespace Periturf.IdentityServer.Verification
 {
-    class ApiAuthenticationSuccessConditionSpecification : IConditionSpecification
+    class EventConditionSpecification<TEvent> : IConditionSpecification where TEvent : Event
     {
         private readonly IEventVerificationManager _eventVerificationManager;
-        private readonly IValueProviderSpecification<ApiAuthenticationSuccessEvent, bool> _evaluatorSpecification;
+        private readonly IValueProviderSpecification<TEvent, bool> _evaluatorSpecification;
 
-        public ApiAuthenticationSuccessConditionSpecification(
+        public EventConditionSpecification(
             string componentName,
             IEventVerificationManager eventVerificationManager,
-            IValueProviderSpecification<ApiAuthenticationSuccessEvent, bool> evaluatorSpecification)
+            IValueProviderSpecification<TEvent, bool> evaluatorSpecification)
         {
             ComponentName = componentName;
             _eventVerificationManager = eventVerificationManager;

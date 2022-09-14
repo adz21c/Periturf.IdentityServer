@@ -29,10 +29,10 @@ using Periturf.Web.Verification;
 
 namespace Periturf.IdentityServer.Tests.Verification
 {
-    class ApiAuthenticationSuccessTests
+    class EventTests
     {
         [Test]
-        public async Task Given_NoFeeds_When_BuildThenDispose_Then_FeedCreatedAndRegisteredAndUnregisteredAndDisposed()
+        public async Task Given_EvaluatorAndEventType_When_Build_Then_CreateFeed()
         {
             var feed = A.Fake<IConditionFeed>();
             var eventVerificationManager = A.Fake<IEventVerificationManager>();
@@ -47,7 +47,7 @@ namespace Periturf.IdentityServer.Tests.Verification
             const string componentName = "Component";
 
             var conditionBuilder = new IdentityServerConditionBuilder(componentName, eventVerificationManager);
-            var spec = conditionBuilder.OnApiAuthenticationSuccess(v => evaluatorSpec);
+            var spec = conditionBuilder.OnEvent<ApiAuthenticationSuccessEvent>(v => evaluatorSpec);
 
             var instanceFeed = await spec.BuildAsync(conditionInstanceFactory, CancellationToken.None);
 

@@ -30,9 +30,10 @@ namespace Periturf.IdentityServer.Verification
     {
         private List<EventConditionFeed> _feeds = new List<EventConditionFeed>();
 
-        public IConditionFeed CreateFeed(IConditionInstanceFactory conditionInstanceFactory, Func<ApiAuthenticationSuccessEvent, ValueTask<bool>> evaluator)
+        public IConditionFeed CreateFeed<TEvent>(IConditionInstanceFactory conditionInstanceFactory, Func<TEvent, ValueTask<bool>> evaluator)
+            where TEvent : Event
         {
-            var feed = new EventConditionFeed(this, conditionInstanceFactory, evaluator);
+            var feed = new EventConditionFeed(this, conditionInstanceFactory, (Func<ApiAuthenticationSuccessEvent, ValueTask<bool>>)evaluator);
             _feeds.Add(feed);
             return feed;
         }

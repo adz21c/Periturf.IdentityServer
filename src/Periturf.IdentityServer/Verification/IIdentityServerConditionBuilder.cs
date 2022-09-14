@@ -38,6 +38,7 @@ namespace Periturf.IdentityServer.Verification
         /// </summary>
         /// <param name="config"></param>
         /// <returns></returns>
-        IConditionSpecification OnApiAuthenticationSuccess(Func<IValueContext<ApiAuthenticationSuccessEvent>, IValueProviderSpecification<ApiAuthenticationSuccessEvent, bool>> config);
+        IConditionSpecification OnEvent<TEvent>(Func<IValueContext<TEvent>, IValueProviderSpecification<TEvent, bool>> config)
+            where TEvent : Event;
     }
 }

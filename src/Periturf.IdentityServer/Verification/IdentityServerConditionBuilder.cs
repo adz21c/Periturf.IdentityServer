@@ -19,6 +19,7 @@ using Duende.IdentityServer.Events;
 using Periturf.Values;
 using Periturf.Verify;
 using System;
+using static IdentityModel.OidcConstants;
 
 namespace Periturf.IdentityServer.Verification
 {
@@ -33,11 +34,12 @@ namespace Periturf.IdentityServer.Verification
             _eventVerificationManager = eventVerificationManager;
         }
 
-        public IConditionSpecification OnApiAuthenticationSuccess(Func<IValueContext<ApiAuthenticationSuccessEvent>, IValueProviderSpecification<ApiAuthenticationSuccessEvent, bool>> config)
+        public IConditionSpecification OnEvent<TEvent>(Func<IValueContext<TEvent>, IValueProviderSpecification<TEvent, bool>> config)
+            where TEvent : Event
         {
-            return new ApiAuthenticationSuccessConditionSpecification(_componentName, _eventVerificationManager, config(new ValueContext()));
+            return new EventConditionSpecification<TEvent>(_componentName, _eventVerificationManager, config(new ValueContext<TEvent>()));
         }
 
-        class ValueContext : IValueContext<ApiAuthenticationSuccessEvent> { }
+        class ValueContext<TEvent> : IValueContext<TEvent> { }
     }
 }
