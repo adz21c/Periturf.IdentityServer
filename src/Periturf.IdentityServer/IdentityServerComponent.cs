@@ -20,17 +20,22 @@ using Periturf.Components;
 using Periturf.Configuration;
 using Periturf.Events;
 using Periturf.IdentityServer.Configuration;
+using Periturf.IdentityServer.Verification;
 using Periturf.Verify;
 
 namespace Periturf.IdentityServer
 {
     class IdentityServerComponent : IComponent
     {
+        private readonly string _componentName;
         private readonly ConfigurationStore _configStore;
+        private readonly IEventVerificationManager _eventVerificationManager;
 
-        public IdentityServerComponent(ConfigurationStore configStore)
+        public IdentityServerComponent(ConfigurationStore configStore, string componentName, IEventVerificationManager eventVerificationManager)
         {
             _configStore = configStore;
+            _componentName = componentName;
+            _eventVerificationManager = eventVerificationManager;
         }
 
         public IComponentClient CreateClient()
@@ -40,7 +45,7 @@ namespace Periturf.IdentityServer
 
         public IConditionBuilder CreateConditionBuilder()
         {
-            throw new System.NotImplementedException();
+            return new IdentityServerConditionBuilder(_componentName, _eventVerificationManager);
         }
 
         public TSpecification CreateConfigurationSpecification<TSpecification>(IEventHandlerFactory eventHandlerFactory) where TSpecification : IConfigurationSpecification

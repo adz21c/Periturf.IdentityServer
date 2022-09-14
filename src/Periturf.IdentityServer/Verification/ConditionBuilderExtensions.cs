@@ -15,30 +15,24 @@
 //  
 //
 
-using Duende.IdentityServer.Events;
-using Microsoft.IdentityModel.Tokens;
-using Periturf.Values;
 using Periturf.Verify;
-using Periturf.Web.RequestCriteria;
-using System;
-using System.Collections.Generic;
-using System.Linq;
-using System.Text;
-using System.Threading.Tasks;
 
 namespace Periturf.IdentityServer.Verification
 {
     /// <summary>
     /// 
     /// </summary>
-    public interface IIdentityServerConditionBuilder : IConditionBuilder
+    public static class ConditionBuilderExtensions
     {
         /// <summary>
         /// 
         /// </summary>
-        /// <param name="config"></param>
+        /// <param name="configurator"></param>
+        /// <param name="name"></param>
         /// <returns></returns>
-        IConditionSpecification OnEvent<TEvent>(Func<IValueContext<TEvent>, IValueProviderSpecification<TEvent, bool>> config)
-            where TEvent : Event;
+        public static IIdentityServerConditionBuilder IdentityServer(this IConditionConfigurator configurator, string name = "IdentityServer")
+        {
+            return (IIdentityServerConditionBuilder)configurator.GetConditionBuilder(name);
+        }
     }
 }

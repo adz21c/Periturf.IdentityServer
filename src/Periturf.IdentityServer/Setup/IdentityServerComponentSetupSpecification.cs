@@ -21,6 +21,7 @@ using Microsoft.AspNetCore.Builder;
 using Microsoft.AspNetCore.Http;
 using Microsoft.Extensions.DependencyInjection;
 using Periturf.IdentityServer.Configuration;
+using Periturf.IdentityServer.Verification;
 using Periturf.Web.Setup;
 using System;
 using System.Collections.Generic;
@@ -51,12 +52,14 @@ namespace Periturf.IdentityServer.Setup
 
         public ConfigureWebAppDto Configure()
         {
+            var eventVerificationManager = new EventVerificationManager();
             var configurationStore = new ConfigurationStore();
             return new ConfigureWebAppDto(
-                new IdentityServerComponent(configurationStore),
+                new IdentityServerComponent(configurationStore, Name, eventVerificationManager),
                 app => app.UseIdentityServer(),
                 services =>
                 {
+                    services.AddSingleton(eventVerificationManager);
                     services.AddSingleton(configurationStore);
                     services.AddIdentityServer(_options ?? (o => { }))
                         .AddClientStore<ClientStore>()
