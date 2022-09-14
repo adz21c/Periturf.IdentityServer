@@ -72,7 +72,7 @@ namespace Periturf.IdentityServer.Setup
                 {
                     services.AddSingleton(eventVerificationManager);
                     services.AddSingleton(configurationStore);
-                    services.AddIdentityServer(_options ?? (o => { }))
+                    services.AddIdentityServer(options)
                         .AddClientStore<ClientStore>()
                         .AddResourceStore<ResourceStore>();
                 });
