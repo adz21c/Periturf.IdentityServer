@@ -26,7 +26,7 @@ using Periturf.Verify;
 
 namespace Periturf.IdentityServer.Verification
 {
-    class EventVerificationManager : IEventSink
+    class EventVerificationManager : IEventSink, IEventVerificationManager
     {
         private List<EventConditionFeed> _feeds = new List<EventConditionFeed>();
 
@@ -44,7 +44,7 @@ namespace Periturf.IdentityServer.Verification
 
         public async Task PersistAsync(Event evt)
         {
-            foreach(var feed in _feeds)
+            foreach (var feed in _feeds)
                 await feed.EvaluateInstanceAsync((ApiAuthenticationSuccessEvent)evt, CancellationToken.None);
         }
 
