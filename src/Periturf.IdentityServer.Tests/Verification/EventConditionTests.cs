@@ -29,7 +29,7 @@ using Periturf.Web.Verification;
 
 namespace Periturf.IdentityServer.Tests.Verification
 {
-    class EventTests
+    class EventConditionTests
     {
         [Test]
         public async Task Given_EvaluatorAndEventType_When_Build_Then_CreateFeed()
