@@ -52,8 +52,19 @@ namespace Periturf.IdentityServer.Setup
 
         public ConfigureWebAppDto Configure()
         {
+            // Ensure required config is overriden
+            var options = (IdentityServerOptions o) =>
+            {
+                _options?.Invoke(o);
+                o.Events.RaiseSuccessEvents = true;
+                o.Events.RaiseFailureEvents = true;
+                o.Events.RaiseInformationEvents = true;
+                o.Events.RaiseErrorEvents = true;
+            };
+
             var eventVerificationManager = new EventVerificationManager();
             var configurationStore = new ConfigurationStore();
+            
             return new ConfigureWebAppDto(
                 new IdentityServerComponent(configurationStore, Name, eventVerificationManager),
                 app => app.UseIdentityServer(),
